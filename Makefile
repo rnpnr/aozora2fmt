@@ -7,8 +7,8 @@ BINS = aozora2fmt
 
 default: $(BINS)
 
-aozora2fmt: aozora2fmt.go
-	go build -ldflags "$(LDFLAGS)" $@.go
+aozora2fmt: aozora/main.go
+	go build -ldflags "$(LDFLAGS)" -o $@ aozora/main.go
 
 install: $(BINS)
 	mkdir -p $(PREFIX)/bin
