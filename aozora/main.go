@@ -8,7 +8,6 @@ import (
 	"log"
 	"os"
 	"regexp"
-	"strconv"
 	"strings"
 	"unicode/utf8"
 
@@ -56,26 +55,18 @@ func get_outfmt(fmt string) *OutFmt {
 }
 
 func replace_jis(str string) string {
-	exp := regexp.MustCompile(`※［＃([^］]+)］`)
+	exp := regexp.MustCompile(`※［＃[^」]+」、([^］]+)］`)
 
 	for _, matches := range exp.FindAllStringSubmatch(str, -1) {
-		sub_exp := regexp.MustCompile(`第(\d)水準(\d)-(\d\d)-(\d\d)`)
-	
-		nums := sub_exp.FindStringSubmatch(str)
-		if nums == nil {
+		p, m, k, t := 0, 0, 0, 0
+		n, _ := fmt.Sscanf(matches[1], `第%01d水準%01d-%02d-%02d`, &p, &m, &k, &t)
+
+		if n != 4 {
 			/* the same character appeared multiple times in str */
 			continue
 		}
-		num, _ := strconv.Atoi(nums[1] + nums[2] + nums[3] + nums[4])
 
-		m := aozora2fmt.JisMap()
-		replacement, ok := m[num]
-		if !ok {
-			log.Printf("jis code not implemented: %d: %s\n", num, matches[0])
-			continue
-		}
-
-		str = strings.Replace(str, matches[0], replacement, -1)
+		str = strings.Replace(str, matches[0], aozora2fmt.Jis2Utf8(m, k, t), -1)
 	}
 
 	return str
@@ -105,7 +96,7 @@ func replace_ruby(str string, of *OutFmt) string {
 
 func replace_accents(str string) string {
 	exp := regexp.MustCompile(`〔([^〕]+)〕`)
-	
+
 	for _, matches := range exp.FindAllStringSubmatch(str, -1) {
 		str = strings.Replace(str, matches[0], matches[1], -1)
 
